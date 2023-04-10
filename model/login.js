@@ -6,6 +6,7 @@ const loginSchema= new Schema({
 	lastname: { type: String, required: true},
 	roll: { type: String, required: true},
 	email: { type: String, required: true},
+	verified: {type: Boolean, default: false},
 	birthdate: { type: Date, required: true},
 	password: { type: String, required: true},
 	type: { type: String, required: true},
