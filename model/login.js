@@ -9,7 +9,7 @@ const loginSchema= new Schema({
 	verified: {type: Boolean, default: false},
 	birthdate: { type: Date, required: true},
 	password: { type: String, required: true},
-	type: { type: String, required: true},
+	type: { type: String, required: true, default: "student"},
 	dp: { type: Buffer }
 });
 
