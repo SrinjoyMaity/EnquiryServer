@@ -4,6 +4,8 @@ var ride = require('./model/ride.js');
 
 const express=require('express');
 const cors=require("cors");
+const bcrypt=require('bcrypt');
+const saltrounds=10;
 const app=express();
 
 app.use(express.json());
@@ -58,7 +60,6 @@ async function postAccount(req, res)
 {
     res.statusCode=503;
     var rol, emal;
-    console.log(req.body);
     await login.count({roll: req.body.roll}).then(function(data){
         rol=data;
     });
@@ -73,22 +74,30 @@ async function postAccount(req, res)
     }
     else
     {
-        var user= new login({
-            firstname:req.body.firstname,
-            lastname:req.body.lastname,
-            roll:req.body.roll,
-            email:req.body.email,
-            birthdate:req.body.birthdate,
-            password:req.body.password
+        var pass="";
+        await bcrypt.hash(req.body.password,saltrounds).then(function(data){
+            pass=data;
+            console.log(pass);
         });
-        await user.save();
-
-        await login.count({roll: req.body.roll}).then(function(data){
-            rol=data;
-        });
-        if(rol)
+        if(pass!=="")
         {
-            res.statusCode=204;
+            var user= new login({
+                firstname:req.body.firstname,
+                lastname:req.body.lastname,
+                roll:req.body.roll,
+                email:req.body.email,
+                birthdate:req.body.birthdate,
+                password:pass
+            });
+            await user.save();
+            console.log(user);
+            await login.count({roll: req.body.roll}).then(function(data){
+                rol=data;
+            });
+            if(rol)
+            {
+                res.statusCode=204;
+            }
         }
     }
     res.send();
