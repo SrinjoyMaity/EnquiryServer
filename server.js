@@ -5,6 +5,7 @@ var ride = require('./model/ride.js');
 const express=require('express');
 const cors=require("cors");
 const bcrypt=require('bcrypt');
+const jwt=require('jsonwebtoken');
 const saltrounds=10;
 const app=express();
 
@@ -86,22 +87,31 @@ async function postCred(req,res)
                 if(pass)
                 {
                     console.log(data);
-                    res.statusCode=204;
+                    const cookie=await jwt.sign({userId: data._id}, "lawra");
+                    console.log(cookie);
+                    res.status(200).json({
+                        token:cookie,
+                    });
                 }
                 else
                 {
                     console.log("password didnot match");
                     res.statusCode=406;
+                    res.send();
                 }
             }
             else
             {
                 console.log(req.body.email+"not verified");
                 res.statusCode=406
+                res.send();
             }
         })
     }
+    else
+    {
     res.send();
+    }
 }
 
 //POST functions ////////////////////////////////////////////////////////////
