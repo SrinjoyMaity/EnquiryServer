@@ -54,8 +54,57 @@ userRouter
 .get()
 .post(postAccount)
 
-//GET functions /////////////////////////////////////////////////////////////
+userRouter
+.route('/login')
+.get()
+.post(postCred)
 
+
+//GET functions /////////////////////////////////////////////////////////////
+async function postCred(req,res)
+{
+    res.statusCode=503;
+    var allow = false;
+    var avail = false;
+    await login.count({email: req.body.email}).then(function(data){
+        if(data!==0)
+        {
+            avail=true;
+        }
+    });
+    if(avail)
+    {
+        await login.findOne({email:req.body.email})
+        .then(async function(data){
+            if(!data.verified)
+            {
+                var pass;
+                await bcrypt.compare(req.body.password,data.password).
+                then(function(val){
+                    pass=val;
+                })
+                if(pass)
+                {
+                    console.log(data);
+                    res.statusCode=204;
+                }
+                else
+                {
+                    console.log("password didnot match");
+                    res.statusCode=406;
+                }
+            }
+            else
+            {
+                console.log(req.body.email+"not verified");
+                res.statusCode=406
+            }
+        })
+    }
+    res.send();
+}
+
+//POST functions ////////////////////////////////////////////////////////////
 async function postAccount(req, res)
 {
     res.statusCode=503;
@@ -63,7 +112,6 @@ async function postAccount(req, res)
     await login.count({roll: req.body.roll}).then(function(data){
         rol=data;
     });
-    
     await login.count({email:req.body.email}).then(function(data){
         emal=data;
     });
@@ -102,8 +150,5 @@ async function postAccount(req, res)
     }
     res.send();
 }
-
-//POST functions ////////////////////////////////////////////////////////////
-
 // PUT functions ////////////////////////////////////////////////////////////
 // DELETE functions /////////////////////////////////////////////////////////
