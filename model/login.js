@@ -10,7 +10,7 @@ const loginSchema= new Schema({
 	birthdate: { type: Date, required: true},
 	password: { type: String, required: true},
 	type: { type: String, required: true, default: "student"},
-	dp: { type: Buffer }
+	dp: { type: Buffer ,default: null}
 });
 
 const login= model('login', loginSchema, 'login');

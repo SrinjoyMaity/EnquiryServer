@@ -1,10 +1,13 @@
 var login = require ('./model/login.js');
 var item = require('./model/item.js');
 var ride = require('./model/ride.js');
+
 const express=require('express');
+const cors=require("cors");
 const app=express();
 
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
 // Connecting to the mongo database.................
 
@@ -23,15 +26,73 @@ var dat=collect.find({},{ _id:0 }).then(function(data){
 
 app.listen(2000);
 
-//paths..........
+// CORS //////
+const whitelist=["http://localhost:3000"];
+const corsoptions ={
+    origin: function (origin, callback)
+    {
+        if(!origin || whitelist.indexOf(origin)!=-1){
+            callback(null,true);
+        }
+        else{
+            callback(new Error("Server access denied due to CORS!"))
+        }
+    },
+    credentials: true
+}
+app.use(cors(corsoptions));
+/// CORS ///////
 
+//paths..........
+const userRouter =express.Router();
+app.use('/enquiry', userRouter);
+
+userRouter
+.route('/register')
+.get()
+.post(postAccount)
 
 //GET functions /////////////////////////////////////////////////////////////
 
-app.get('/', (req, res)=>
+async function postAccount(req, res)
 {
-    res.send('<h1>Hello world</h1>')
-});
+    res.statusCode=503;
+    var rol, emal;
+    console.log(req.body);
+    await login.count({roll: req.body.roll}).then(function(data){
+        rol=data;
+    });
+    
+    await login.count({email:req.body.email}).then(function(data){
+        emal=data;
+    });
+    
+    if(rol||emal)
+    {
+        res.statusCode=406;
+    }
+    else
+    {
+        var user= new login({
+            firstname:req.body.firstname,
+            lastname:req.body.lastname,
+            roll:req.body.roll,
+            email:req.body.email,
+            birthdate:req.body.birthdate,
+            password:req.body.password
+        });
+        await user.save();
+
+        await login.count({roll: req.body.roll}).then(function(data){
+            rol=data;
+        });
+        if(rol)
+        {
+            res.statusCode=204;
+        }
+    }
+    res.send();
+}
 
 //POST functions ////////////////////////////////////////////////////////////
 
