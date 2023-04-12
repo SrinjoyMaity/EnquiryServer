@@ -94,7 +94,7 @@ async function getAccount(req,res)
     });
     if(avail)
     {
-        await login.findOne({_id: decode.userId},{password:false, email:false, verified:false})
+        await login.findOne({_id: decode.userId},{password:false, email:false, verified:false, createddate:false})
         .then(async function(data){
             console.log(data);
             res.status(200).json(data);
@@ -190,6 +190,7 @@ async function postAccount(req, res)
                 roll:req.body.roll,
                 email:req.body.email,
                 birthdate:req.body.birthdate,
+                createddate: Date.now(),
                 password:pass
             });
             await user.save();
