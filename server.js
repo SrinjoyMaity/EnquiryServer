@@ -30,7 +30,7 @@ var dat=collect.find({},{ _id:0 }).then(function(data){
 app.listen(2000);
 
 // CORS //////
-const whitelist=["http://localhost:3000"];
+const whitelist=["http://localhost:3000","http://localhost:3000/main"];
 const corsoptions ={
     origin: function (origin, callback)
     {
@@ -60,8 +60,54 @@ userRouter
 .get()
 .post(postCred)
 
+userRouter
+.route('/accdata')
+.get(getAccount)
+.post()
 
 //GET functions /////////////////////////////////////////////////////////////
+async function getAccount(req,res)
+{
+    var token = req.headers.authorization;
+    res.statusCode=503;
+    var allow = false;
+    var avail = false;
+    var decode;
+    console.log("token:"+token);
+    if(token)
+    {
+        try{
+            decode = jwt.verify(token, 'lawra')
+        }
+         catch(err)
+         {
+            res.status(404).json({})
+            return;
+         };
+         console.log("decode:"+decode.userId);
+    }
+    await login.count({_id: decode.userId}).then(function(data){
+        if(data!==0)
+        {
+            avail=true;
+        }
+    });
+    if(avail)
+    {
+        await login.findOne({_id: decode.userId},{password:false})
+        .then(async function(data){
+            console.log(data);
+            res.status(200).json(data);
+        })
+    }
+    else
+    {
+        res.send();
+    }
+
+}
+
+//POST functions ////////////////////////////////////////////////////////////
 async function postCred(req,res)
 {
     res.statusCode=503;
@@ -114,7 +160,6 @@ async function postCred(req,res)
     }
 }
 
-//POST functions ////////////////////////////////////////////////////////////
 async function postAccount(req, res)
 {
     res.statusCode=503;
