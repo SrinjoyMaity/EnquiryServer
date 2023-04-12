@@ -94,7 +94,7 @@ async function getAccount(req,res)
     });
     if(avail)
     {
-        await login.findOne({_id: decode.userId},{password:false})
+        await login.findOne({_id: decode.userId},{password:false, email:false, verified:false})
         .then(async function(data){
             console.log(data);
             res.status(200).json(data);
