@@ -2,15 +2,18 @@ var login = require ('./model/login.js');
 var item = require('./model/item.js');
 var ride = require('./model/ride.js');
 
+
 const express=require('express');
 const cors=require("cors");
 const bcrypt=require('bcrypt');
 const jwt=require('jsonwebtoken');
+const bodyparser=require('body-parser');
 const saltrounds=10;
 const app=express();
 
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(bodyparser.json({limit:'50mb'}));
+app.use(bodyparser.urlencoded({limit:'50mb',extended: true}));
+
 
 // Connecting to the mongo database.................
 
@@ -65,6 +68,17 @@ userRouter
 .get(getAccount)
 .post()
 
+userRouter
+.route('/updateAccount')
+.get()
+.post(postupdateAccount)
+
+userRouter
+.route('/updatepp')
+.get()
+.post(postupdatepp)
+
+
 //GET functions /////////////////////////////////////////////////////////////
 async function getAccount(req,res)
 {
@@ -96,7 +110,9 @@ async function getAccount(req,res)
     {
         await login.findOne({_id: decode.userId},{password:false, email:false, verified:false, createddate:false})
         .then(async function(data){
-            console.log(data);
+            console.log(data.roll);
+            var value=data;
+            value.dp=data.dp.toString();
             res.status(200).json(data);
         })
     }
@@ -111,7 +127,6 @@ async function getAccount(req,res)
 async function postCred(req,res)
 {
     res.statusCode=503;
-    var allow = false;
     var avail = false;
     await login.count({email: req.body.email}).then(function(data){
         if(data!==0)
@@ -132,7 +147,7 @@ async function postCred(req,res)
                 })
                 if(pass)
                 {
-                    console.log(data);
+                    console.log(data.roll);
                     const cookie=await jwt.sign({userId: data._id}, "lawra");
                     console.log(cookie);
                     res.status(200).json({
@@ -205,6 +220,94 @@ async function postAccount(req, res)
         }
     }
     res.send();
+}
+
+async function postupdateAccount(req, res)
+{
+    res.statusCode=503;
+    var avail = false;
+    await login.count({_id: req.body.id}).then(function(data){
+        if(data!==0)
+        {
+            avail=true;
+        }
+    });
+    if(avail)
+    {
+        if(req.body.firstname!=="")
+        {
+            await login.updateOne({_id:req.body.id},{$set:{firstname:req.body.firstname}});
+        }
+        if(req.body.lastname!=="")
+        {
+            await login.updateOne({_id:req.body.id},{$set:{lastname:req.body.lastname}});
+        }
+        
+        if(req.body.oldpassword!=="" && req.body.password!=="")
+        {
+            await login.findOne({_id:req.body.id})
+            .then(async function(data)
+            {
+                    var pass;
+                    await bcrypt.compare(req.body.oldpassword,data.password).
+                    then(function(val){
+                        pass=val;
+                    })
+                    if(pass)
+                    {
+                        var pass="";
+                        await bcrypt.hash(req.body.password,saltrounds).then(function(data){
+                            pass=data;
+                            console.log(pass);
+                        });
+                        console.log(data);
+                        await login.updateOne({_id:req.body.id},{$set:{password:pass}});
+                        res.statusCode=200;
+                        res.send();
+                    }
+                    else
+                    {
+                        console.log("password didnot match");
+                        res.statusCode=406;
+                        res.send();
+                    }
+            })
+        }
+        else
+        {
+            res.statusCode=200;
+            res.send();
+        }
+        
+    }
+    else
+    {
+        res.send();
+    }
+}
+async function postupdatepp(req,res)
+{
+    res.statusCode=503;
+    var avail = false;
+    await login.count({_id: req.body.id}).then(function(data){
+        if(data!==0)
+        {
+            avail=true;
+        }
+    });
+    if(avail)
+    {
+        if(req.body.bin!=="")
+        {
+            await login.updateOne({_id:req.body.id},{$set:{dp:req.body.bin}});
+            res.statusCode=200;
+            res.send();
+        }
+    }
+    else
+    {
+        res.send();
+    }
 }
 // PUT functions ////////////////////////////////////////////////////////////
 // DELETE functions /////////////////////////////////////////////////////////
