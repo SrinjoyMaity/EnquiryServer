@@ -78,6 +78,10 @@ userRouter
 .get()
 .post(postupdatepp)
 
+userRouter
+.route('/deleteAccount')
+.get()
+.post(postdeleteAccount)
 
 //GET functions /////////////////////////////////////////////////////////////
 async function getAccount(req,res)
@@ -111,8 +115,6 @@ async function getAccount(req,res)
         await login.findOne({_id: decode.userId},{password:false, email:false, verified:false, createddate:false})
         .then(async function(data){
             console.log(data.roll);
-            var value=data;
-            value.dp=data.dp.toString();
             res.status(200).json(data);
         })
     }
@@ -303,6 +305,45 @@ async function postupdatepp(req,res)
             res.statusCode=200;
             res.send();
         }
+    }
+    else
+    {
+        res.send();
+    }
+}
+async function postdeleteAccount(req,res)
+{
+    res.statusCode=503;
+    var avail = false;
+    await login.count({_id: req.body.id}).then(function(data){
+        if(data!==0)
+        {
+            avail=true;
+        }
+    });
+    if(avail)
+    {
+        await login.findOne({_id:req.body.id})
+            .then(async function(data)
+            {
+                    var pass;
+                    await bcrypt.compare(req.body.password,data.password).
+                    then(function(val){
+                        pass=val;
+                    })
+                    if(pass)
+                    {
+                        await login.deleteOne({_id:req.body.id});
+                        res.statusCode=200;
+                        res.send();
+                    }
+                    else
+                    {
+                        console.log("password didnot match");
+                        res.statusCode=406;
+                        res.send();
+                    }
+            })
     }
     else
     {
