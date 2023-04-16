@@ -83,6 +83,12 @@ userRouter
 .get()
 .post(postdeleteAccount)
 
+userRouter
+.route('/additem')
+.get()
+.post(postItem)
+
+
 //GET functions /////////////////////////////////////////////////////////////
 async function getAccount(req,res)
 {
@@ -349,6 +355,21 @@ async function postdeleteAccount(req,res)
     {
         res.send();
     }
+}
+async function postItem(req, res)
+{
+    var user= new item({
+        itemname:req.body.itemname,
+        location:req.body.location,
+        description:req.body.description,
+        image:req.body.bin,
+        date:Date.now(),
+        poster:req.body.id
+        });
+    await user.save();
+    console.log(user._id);
+    res.statusCode=200;
+    res.send(); 
 }
 // PUT functions ////////////////////////////////////////////////////////////
 // DELETE functions /////////////////////////////////////////////////////////
