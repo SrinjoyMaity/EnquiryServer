@@ -84,9 +84,14 @@ userRouter
 .post(postdeleteAccount)
 
 userRouter
-.route('/item')
-.get(getItem)
+.route('/additem')
+.get()
 .post(postItem)
+
+userRouter
+.route('/getitem')
+.get()
+.post(postItemCollect)
 
 
 //GET functions /////////////////////////////////////////////////////////////
@@ -130,9 +135,44 @@ async function getAccount(req,res)
     }
 
 }
-async function getItem(req, res)
+async function postItemCollect(req, res)
 {
-    
+    var begin;
+    var end;
+    if(req.body.begin==="")
+    {
+        begin=new Date("1998-06-05");
+    }
+    else
+    {
+        begin=req.body.begin;
+    }
+    console.log(begin);
+    if(req.body.end==="")
+    {
+        end=new Date(Date.now());
+    }
+    else
+    {
+        end=req.body.end;
+    }
+    console.log(end);
+    if(req.body.id==="")
+    {
+        await login.find({date:{$gte: begin , $lte: end}},{image:false, description:false})
+        .then(function(data){
+            console.log(data);
+            res.status(200).json(data);
+        })
+    }
+    else
+    {
+        await login.find({date:{$gte: begin , $lte: end}, _id:req.body.id},{image:false, description:false})
+        .then(function(data){
+            console.log(data);
+            res.status(200).json(data);
+        })
+    }
 }
 //POST functions ////////////////////////////////////////////////////////////
 async function postCred(req,res)
