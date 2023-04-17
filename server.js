@@ -93,6 +93,11 @@ userRouter
 .get()
 .post(postItemCollect)
 
+userRouter
+.route('/getitemDetail')
+.get()
+.post(postItemId)
+
 
 //GET functions /////////////////////////////////////////////////////////////
 async function getAccount(req,res)
@@ -135,46 +140,29 @@ async function getAccount(req,res)
     }
 
 }
-async function postItemCollect(req, res)
+//POST functions ////////////////////////////////////////////////////////////
+async function postItemId(req,res)
 {
-    var begin;
-    var end;
-    if(req.body.begin==="")
+    var avail=false;
+    await item.count({_id: req.body.id}).then(function(data){
+        if(data!==0)
+        {
+            avail=true;
+        }
+    });
+    if(avail)
     {
-        begin=new Date("1998-06-05");
-    }
-    else
-    {
-        begin=req.body.begin;
-    }
-    console.log(begin);
-    if(req.body.end==="")
-    {
-        end=new Date(Date.now());
-    }
-    else
-    {
-        end=req.body.end;
-    }
-    console.log(end);
-    if(req.body.id==="")
-    {
-        await login.find({date:{$gte: begin , $lte: end}},{image:false, description:false})
-        .then(function(data){
-            console.log(data);
+        await item.findOne({_id: req.body.id},{poster:false})
+        .then(async function(data){
+            console.log(data._id);
             res.status(200).json(data);
         })
     }
     else
     {
-        await login.find({date:{$gte: begin , $lte: end}, _id:req.body.id},{image:false, description:false})
-        .then(function(data){
-            console.log(data);
-            res.status(200).json(data);
-        })
+        res.status(404);
     }
 }
-//POST functions ////////////////////////////////////////////////////////////
 async function postCred(req,res)
 {
     res.statusCode=503;
@@ -413,6 +401,49 @@ async function postItem(req, res)
     console.log(user._id);
     res.statusCode=200;
     res.send(); 
+}
+async function postItemCollect(req, res)
+{
+    var begin;
+    var end;
+    if(req.body.begin==="")
+    {
+        begin=new Date("1998-06-05");
+    }
+    else
+    {
+        begin=req.body.begin;
+    }
+    console.log(begin);
+    if(req.body.end==="")
+    {
+        end=new Date(Date.now());
+    }
+    else
+    {
+        end=req.body.end;
+    }
+    console.log(end);
+    if(req.body.id==="")
+    {
+        await item.find({date:{$gte: begin , $lte: end}},{image:false, description:false})
+        .then(function(data){
+            console.log(data);
+            res.status(200).json(data);
+        })
+    }
+    else
+    {
+        await item.find({date:{$gte: begin , $lte: end}, _id:req.body.id},{image:false, description:false})
+        .then(function(data){
+            console.log(data);
+            res.status(200).json(data);
+        })
+        .catch(function(data){
+            var data=new Array;
+            res.status(200).json("");
+        })
+    }
 }
 // PUT functions ////////////////////////////////////////////////////////////
 // DELETE functions /////////////////////////////////////////////////////////
