@@ -426,7 +426,7 @@ async function postItemCollect(req, res)
     console.log(end);
     if(req.body.id==="")
     {
-        await item.find({date:{$gte: begin , $lte: end}},{image:false, description:false})
+        await item.find({date:{$gte: begin , $lte: end}},{image:false, description:false}).sort({date:-1})
         .then(function(data){
             console.log(data);
             res.status(200).json(data);
@@ -434,7 +434,7 @@ async function postItemCollect(req, res)
     }
     else
     {
-        await item.find({date:{$gte: begin , $lte: end}, _id:req.body.id},{image:false, description:false})
+        await item.find({date:{$gte: begin , $lte: end}, _id:req.body.id},{image:false, description:false}).sort({date:-1})
         .then(function(data){
             console.log(data);
             res.status(200).json(data);
