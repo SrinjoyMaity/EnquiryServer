@@ -84,8 +84,8 @@ userRouter
 .post(postdeleteAccount)
 
 userRouter
-.route('/additem')
-.get()
+.route('/item')
+.get(getItem)
 .post(postItem)
 
 
@@ -130,7 +130,10 @@ async function getAccount(req,res)
     }
 
 }
-
+async function getItem(req, res)
+{
+    
+}
 //POST functions ////////////////////////////////////////////////////////////
 async function postCred(req,res)
 {
