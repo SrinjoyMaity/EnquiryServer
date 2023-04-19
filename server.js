@@ -98,7 +98,24 @@ userRouter
 .get()
 .post(postItemId)
 
-
+userRouter
+.route('/addride')
+.get()
+.post(postRide)
+//other functions ///////////////////////////////////////////////////////////
+ function Checktoken(token)
+{
+    try{
+        var decode = jwt.verify(token, 'lawra');
+        console.log("decode:"+decode.userId);
+        return decode.userId;
+    }
+     catch(err)
+     {
+        return null;
+     };
+    
+}
 //GET functions /////////////////////////////////////////////////////////////
 async function getAccount(req,res)
 {
@@ -128,7 +145,7 @@ async function getAccount(req,res)
     });
     if(avail)
     {
-        await login.findOne({_id: decode.userId},{password:false, email:false, verified:false, createddate:false})
+        await login.findOne({_id: decode.userId},{ _id:false, password:false, email:false, verified:false, createddate:false})
         .then(async function(data){
             console.log(data.roll);
             res.status(200).json(data);
@@ -141,28 +158,10 @@ async function getAccount(req,res)
 
 }
 //POST functions ////////////////////////////////////////////////////////////
-async function postItemId(req,res)
+async function postRide(req, res)
 {
-    var avail=false;
-    await item.count({_id: req.body.id}).then(function(data){
-        if(data!==0)
-        {
-            avail=true;
-        }
-    });
-    if(avail)
-    {
-        await item.findOne({_id: req.body.id},{poster:false})
-        .then(async function(data){
-            console.log(data._id);
-            res.status(200).json(data);
-        })
-    }
-    else
-    {
-        res.status(404);
-    }
 }
+
 async function postCred(req,res)
 {
     res.statusCode=503;
@@ -265,7 +264,10 @@ async function postupdateAccount(req, res)
 {
     res.statusCode=503;
     var avail = false;
-    await login.count({_id: req.body.id}).then(function(data){
+    var token = req.headers.authorization;
+    var id=Checktoken(token);
+
+    await login.count({_id: id}).then(function(data){
         if(data!==0)
         {
             avail=true;
@@ -275,16 +277,16 @@ async function postupdateAccount(req, res)
     {
         if(req.body.firstname!=="")
         {
-            await login.updateOne({_id:req.body.id},{$set:{firstname:req.body.firstname}});
+            await login.updateOne({_id:id},{$set:{firstname:req.body.firstname}});
         }
         if(req.body.lastname!=="")
         {
-            await login.updateOne({_id:req.body.id},{$set:{lastname:req.body.lastname}});
+            await login.updateOne({_id:id},{$set:{lastname:req.body.lastname}});
         }
         
         if(req.body.oldpassword!=="" && req.body.password!=="")
         {
-            await login.findOne({_id:req.body.id})
+            await login.findOne({_id:id})
             .then(async function(data)
             {
                     var pass;
@@ -300,7 +302,7 @@ async function postupdateAccount(req, res)
                             console.log(pass);
                         });
                         console.log(data);
-                        await login.updateOne({_id:req.body.id},{$set:{password:pass}});
+                        await login.updateOne({_id:id},{$set:{password:pass}});
                         res.statusCode=200;
                         res.send();
                     }
@@ -314,7 +316,7 @@ async function postupdateAccount(req, res)
         }
         else
         {
-            res.statusCode=200;
+            res.statusCode=469;
             res.send();
         }
         
@@ -326,9 +328,11 @@ async function postupdateAccount(req, res)
 }
 async function postupdatepp(req,res)
 {
-    res.statusCode=503;
     var avail = false;
-    await login.count({_id: req.body.id}).then(function(data){
+    var token = req.headers.authorization;
+    var id=Checktoken(token);
+    console.log(id);
+    await login.count({_id:id}).then(function(data){
         if(data!==0)
         {
             avail=true;
@@ -338,13 +342,14 @@ async function postupdatepp(req,res)
     {
         if(req.body.bin!=="")
         {
-            await login.updateOne({_id:req.body.id},{$set:{dp:req.body.bin}});
+            await login.updateOne({_id:id},{$set:{dp:req.body.bin}});
             res.statusCode=200;
             res.send();
         }
     }
     else
     {
+        res.statusCode=469;
         res.send();
     }
 }
@@ -352,7 +357,10 @@ async function postdeleteAccount(req,res)
 {
     res.statusCode=503;
     var avail = false;
-    await login.count({_id: req.body.id}).then(function(data){
+    var token = req.headers.authorization;
+    var id=Checktoken(token);
+
+    await login.count({_id: id}).then(function(data){
         if(data!==0)
         {
             avail=true;
@@ -360,7 +368,7 @@ async function postdeleteAccount(req,res)
     });
     if(avail)
     {
-        await login.findOne({_id:req.body.id})
+        await login.findOne({_id: id})
             .then(async function(data)
             {
                     var pass;
@@ -370,7 +378,7 @@ async function postdeleteAccount(req,res)
                     })
                     if(pass)
                     {
-                        await login.deleteOne({_id:req.body.id});
+                        await login.deleteOne({_id:id});
                         res.statusCode=200;
                         res.send();
                     }
@@ -384,18 +392,35 @@ async function postdeleteAccount(req,res)
     }
     else
     {
+        res.statusCode=469;
         res.send();
     }
 }
 async function postItem(req, res)
 {
+    res.statusCode=503;
+    var avail = false;
+    var token = req.headers.authorization;
+    var id=Checktoken(token);
+    await login.count({_id: id}).then(function(data){
+        if(data===0)
+        {
+            avail=true;
+        }
+    });
+    if(avail)
+    {
+        res.statusCode=469;
+        res.send();
+        return;
+    }
     var user= new item({
         itemname:req.body.itemname,
         location:req.body.location,
         description:req.body.description,
         image:req.body.bin,
         date:Date.now(),
-        poster:req.body.id
+        poster:id
         });
     await user.save();
     console.log(user._id);
@@ -404,6 +429,21 @@ async function postItem(req, res)
 }
 async function postItemCollect(req, res)
 {
+    var token = req.headers.authorization;
+    var check=false;
+    var id=Checktoken(token);
+    await login.count({_id:id}).then(function(data){
+        if(data===0)
+        {
+            check=true;
+        }
+    })
+    if(check)
+    {
+        res.statusCode=469;
+        res.send();
+        return;
+    }
     var begin;
     var end;
     if(req.body.begin==="")
@@ -440,9 +480,48 @@ async function postItemCollect(req, res)
             res.status(200).json(data);
         })
         .catch(function(data){
-            var data=new Array;
             res.status(200).json("");
         })
+    }
+}
+async function postItemId(req,res)
+{
+    var chk=false;
+    var avail=false;
+    var token = req.headers.authorization;
+    var id=Checktoken(token);
+    console.log(id);
+    await login.count({_id: id}).then(function(data){
+        if(data===0)
+        {
+            chk=true;
+        }
+    });
+    console.log(chk);
+    if(chk)
+    {
+        res.statusCode=469;
+        res.send();
+        return;
+    }
+    await item.count({_id: req.body.id}).then(function(data){
+        if(data!==0)
+        {
+            avail=true;
+        }
+    });
+    if(avail)
+    {
+        await item.findOne({_id: req.body.id},{poster:false})
+        .then(async function(data){
+            console.log(data._id);
+            res.status(200).json(data);
+        })
+    }
+    else
+    {
+        res.statusCode=404;
+        res.send();
     }
 }
 // PUT functions ////////////////////////////////////////////////////////////
