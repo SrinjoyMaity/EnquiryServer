@@ -158,9 +158,7 @@ async function getAccount(req,res)
 
 }
 //POST functions ////////////////////////////////////////////////////////////
-async function postRide(req, res)
-{
-}
+
 
 async function postCred(req,res)
 {
@@ -262,7 +260,7 @@ async function postAccount(req, res)
 
 async function postupdateAccount(req, res)
 {
-    res.statusCode=503;
+    res.statusCode=469;
     var avail = false;
     var token = req.headers.authorization;
     var id=Checktoken(token);
@@ -523,6 +521,39 @@ async function postItemId(req,res)
         res.statusCode=404;
         res.send();
     }
+}
+async function postRide(req, res)
+{
+    res.statusCode=503;
+    var avail = false;
+    var token = req.headers.authorization;
+    var id=Checktoken(token);
+    await login.count({_id: id}).then(function(data){
+        if(data===0)
+        {
+            avail=true;
+        }
+    });
+    if(avail)
+    {
+        res.statusCode=469;
+        res.send();
+        return;
+    }
+    var rides= new ride({
+        admin:id,
+        phone:req.body.phone,
+        maxslots:req.body.slots,
+        slots:req.body.slots-1,
+        destination:req.body.destination,
+        pickup:req.body.pickup,
+        date: new Date(req.body.date),
+        passengers: [id]
+    });
+    await rides.save();
+    console.log(rides);
+    res.statusCode=200;
+    res.send(); 
 }
 // PUT functions ////////////////////////////////////////////////////////////
 // DELETE functions /////////////////////////////////////////////////////////
