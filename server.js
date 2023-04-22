@@ -102,6 +102,11 @@ userRouter
 .route('/addride')
 .get()
 .post(postRide)
+
+userRouter
+.route('/getride')
+.get()
+.post(postRideCollect)
 //other functions ///////////////////////////////////////////////////////////
  function Checktoken(token)
 {
@@ -554,6 +559,65 @@ async function postRide(req, res)
     console.log(rides);
     res.statusCode=200;
     res.send(); 
+}
+async function postRideCollect(req, res)
+{
+    var token = req.headers.authorization;
+    var check=false;
+    var id=Checktoken(token);
+    await login.count({_id:id}).then(function(data){
+        if(data===0)
+        {
+            check=true;
+        }
+    })
+    if(check)
+    {
+        res.statusCode=469;
+        res.send();
+        return;
+    }
+    var begin;
+    var end=1;
+    if(req.body.begin==="")
+    {
+        begin=new Date(Date.now());
+    }
+    else
+    {
+        begin=req.body.begin;
+    }
+    console.log(begin);
+    if(req.body.end==="")
+    {
+        end = await ride.find({}).sort({date:-1}).limit(1).then(function(data){
+            return data[0].date;
+        });
+    }
+    else
+    {
+        end=req.body.end;
+    }
+    console.log(end);
+    if(req.body.id==="")
+    {
+        await ride.find({date:{$gte: begin , $lte: end}, passengers:{$ne: id}},{image:false, description:false}).sort({date:-1})
+        .then(function(data){
+            console.log(data);
+            res.status(200).json(data);
+        })
+    }
+    else
+    {
+        await ride.find({date:{$gte: begin , $lte: end}, _id:req.body.id,passengers:{$ne: id}},{image:false, description:false}).sort({date:-1})
+        .then(function(data){
+            console.log(data);
+            res.status(200).json(data);
+        })
+        .catch(function(data){
+            res.status(200).json("");
+        })
+    }
 }
 // PUT functions ////////////////////////////////////////////////////////////
 // DELETE functions /////////////////////////////////////////////////////////
